@@ -23,8 +23,10 @@
 import argparse
 import sys
 import time
+import re
 
 unicode_attributes = {}
+derived_core_properties = {}
 
 def fill_attribute(code_point, fields):
     unicode_attributes[code_point] =  {
@@ -73,6 +75,33 @@ def fill_attributes(filename):
                         int(fields_end[0], 16)+1):
                     fill_attribute(code_point, fields)
             fill_attribute(int(fields[0], 16), fields)
+
+def fill_derived_core_property(code_point, property):
+    if code_point in derived_core_properties:
+        derived_core_properties[code_point].append(property)
+    else:
+        derived_core_properties[code_point] = [property]
+
+def fill_derived_core_properties(filename):
+    with open(filename, mode='r') as file:
+        for line in file:
+            match = re.match(
+                r'^(?P<codepoint>[0-9A-F]{4,6})\s*;\s*(?P<property>[a-zA-Z_]+)',
+                line)
+            if match:
+                fill_derived_core_property(
+                    int(match.group('codepoint'), 16),
+                    match.group('property'))
+            match = re.match(
+                r'^(?P<codepoint1>[0-9A-F]{4,6})\.\.(?P<codepoint2>[0-9A-F]{4,6})\s*;\s*(?P<property>[a-zA-Z_]+)',
+                line)
+            if match:
+                for code_point in range(
+                        int(match.group('codepoint1'), 16),
+                        int(match.group('codepoint2'), 16)+1):
+                    fill_derived_core_property(
+                        code_point,
+                        match.group('property'))
 
 def to_upper(code_point):
     if (unicode_attributes[code_point]['name']
@@ -401,7 +430,7 @@ def output_tables(filename, unicode_version):
         file.write('\n')
         file.write('LC_IDENTIFICATION\n')
         file.write('title     "Unicode %s FDCC-set"\n' %unicode_version)
-        file.write('source    "UnicodeData.txt, PropList.txt"\n')
+        file.write('source    "UnicodeData.txt, DerivedCoreProperties.txt"\n')
         file.write('address   ""\n')
         file.write('contact   ""\n')
         file.write('email     "bug-glibc-locales@gnu.org"\n')
@@ -442,6 +471,11 @@ if __name__ == "__main__":
                         type=str,
                         default='UnicodeData.txt',
                         help='The UnicodeData.txt file to read, default: %(default)s')
+    parser.add_argument('-d', '--derived_core_properties_file',
+                        nargs='?',
+                        type=str,
+                        default='DerivedCoreProperties.txt',
+                        help='The DerivedCoreProperties.txt file to read, default: %(default)s')
     parser.add_argument('-o', '--output_file',
                         nargs='?',
                         type=str,
@@ -455,5 +489,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     fill_attributes(args.unicode_data_file)
+    fill_derived_core_properties(args.derived_core_properties_file)
     verifications()
     output_tables(args.output_file, args.unicode_version)
