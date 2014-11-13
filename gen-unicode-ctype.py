@@ -125,36 +125,30 @@ def to_title(code_point):
         return code_point
 
 def is_upper(code_point):
-    return (to_lower(code_point) != code_point)
+    return (to_lower(code_point) != code_point
+            or (code_point in derived_core_properties
+                and 'Uppercase' in derived_core_properties[code_point]))
 
 def is_lower(code_point):
+    # Some characters are defined as “Lowercase” in Derived_Core_Properties.txt
+    # but do not have a mapping to upper case. For example,
+    # ꜰ U+A72F “LATIN LETTER SMALL CAPITAL F” is one of these.
     return (to_upper(code_point) != code_point
             # <U00DF> is lowercase, but without simple to_upper mapping.
-            or code_point == 0x00DF)
+            or code_point == 0x00DF
+            or (code_point in derived_core_properties
+                and 'Lowercase' in derived_core_properties[code_point]))
 
 def is_alpha(code_point):
-    return (unicode_attributes[code_point]['name']
-            and ((unicode_attributes[code_point]['category'].startswith('L')
-                  # Theppitak Karoonboonyanan <thep@links.nectec.or.th> says
-                  # <U0E2F>, <U0E46> should belong to is_punct.
-                  and (code_point != 0x0E2F and code_point != 0x0E46))
-                 # Theppitak Karoonboonyanan <thep@links.nectec.or.th> says
-                 # <U0E31>, <U0E34>..<U0E3A>, <U0E47>..<U0E4E> are is_alpha.
-                 or code_point == 0x0E31
-                 or (code_point >= 0x0E34 and code_point <= 0x0E3A)
-                 or (code_point >= 0x0E47 and code_point <= 0x0E4E)
-                 # Avoid warning for <U0345>.
-                 or code_point == 0x0345
-                 # Avoid warnings for <U2160>..<U217F>.
-                 or unicode_attributes[code_point]['category'] == 'Nl'
-                 # Avoid warnings for <U24B6>..<U24E9>.
-                 or (unicode_attributes[code_point]['category'] == 'So'
-                     and ' LETTER ' in unicode_attributes[code_point]['name'])
-                 # Consider all the non-ASCII digits as alphabetic.
-		 # ISO C 99 forbids us to have them in category “digit”,
-		 # but we want iswalnum to return true on them.
-                 or (unicode_attributes[code_point]['category'] == 'Nd'
-                     and not (code_point >= 0x0030 and code_point <= 0x0039))))
+    return ((code_point in derived_core_properties
+             and
+             'Alphabetic' in derived_core_properties[code_point])
+            or
+            # Consider all the non-ASCII digits as alphabetic.
+            # ISO C 99 forbids us to have them in category “digit”,
+            # but we want iswalnum to return true on them.
+            (unicode_attributes[code_point]['category'] == 'Nd'
+             and not (code_point >= 0x0030 and code_point <= 0x0039)))
 
 def is_digit(code_point):
     if 0:
