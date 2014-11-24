@@ -255,9 +255,9 @@ def is_combining_level3(code_point):
 def ucs_symbol(code_point):
     '''Return the UCS symbol string for a Unicode character.'''
     if code_point < 0x10000:
-        return '<U%04X>' % code_point
+        return '<U{:04X}>'.format(code_point)
     else:
-        return '<U%08X>' % code_point
+        return '<U{:08X}>'.format(code_point)
 
 def ucs_symbol_range(code_point_low, code_point_high):
     return ucs_symbol(code_point_low) + '..' + ucs_symbol(code_point_high)
@@ -420,10 +420,10 @@ def output_tables(filename, unicode_version):
         file.write('escape_char /\n')
         file.write('comment_char %\n')
         file.write('\n')
-        file.write('%% Generated automatically by gen-unicode-ctype for Unicode %s.\n' %unicode_version)
+        file.write('% Generated automatically by gen-unicode-ctype.py for Unicode {:s}.\n'.format(unicode_version))
         file.write('\n')
         file.write('LC_IDENTIFICATION\n')
-        file.write('title     "Unicode %s FDCC-set"\n' %unicode_version)
+        file.write('title     "Unicode {:s} FDCC-set"\n'.format(unicode_version))
         file.write('source    "UnicodeData.txt, DerivedCoreProperties.txt"\n')
         file.write('address   ""\n')
         file.write('contact   ""\n')
@@ -432,28 +432,83 @@ def output_tables(filename, unicode_version):
         file.write('fax       ""\n')
         file.write('language  ""\n')
         file.write('territory "Earth"\n')
-        file.write('revision  "%s"\n' %unicode_version)
-        file.write('date      "%s"\n' %time.strftime('%Y-%m-%d'))
-        file.write('category  "unicode:2001";LC_CTYPE\n')
+        file.write('revision  "{:s}"\n'.format(unicode_version))
+        file.write('date      "{:s}"\n'.format(time.strftime('%Y-%m-%d')))
+        file.write('category  "unicode:2014";LC_CTYPE\n')
         file.write('END LC_IDENTIFICATION\n')
         file.write('\n')
         file.write('LC_CTYPE\n')
+        file.write('% The following is the 14652 i18n fdcc-set LC_CTYPE category.\n')
+        file.write('% It covers Unicode version {:s}.\n'.format(unicode_version))
+        file.write('% The character classes and mapping tables were automatically\n')
+        file.write('% generated using the gen-unicode-ctype.py program.\n')
+
+        file.write('\n')
+        file.write('% The "upper" class reflects the uppercase characters of class "alpha"\n')
         output_charclass(file, 'upper', is_upper)
+
+        file.write('\n')
+        file.write('% The "lower" class reflects the lowercase characters of class "alpha"\n')
         output_charclass(file, 'lower', is_lower)
+
+        file.write('\n')
+        file.write('% The "alpha" class of the "i18n" FDCC-set is reflecting\n')
+        file.write('% the recommendations in TR 10176 annex A\n')
         output_charclass(file, 'alpha', is_alpha)
+
+        file.write('\n')
+        file.write('% The "digit" class must only contain the BASIC LATIN digits, says ISO C 99\n')
+        file.write('% (sections 7.25.2.1.5 and 5.2.1).\n')
         output_charclass(file, 'digit', is_digit)
-        output_charclass(file, 'outdigit', is_outdigit)
+
+        file.write('\n')
+        file.write('% The "outdigit" information is by default "0" to "9".  We don\'t have to\n')
+        file.write('% provide it here since localedef will fill in the bits and it would\n')
+        file.write('% prevent locales copying this file define their own values.\n')
+        file.write('% outdigit /\n')
+        file.write('%    <U0030>..<U0039>\n')
+        # output_charclass(file, 'outdigit', is_outdigit)
+
+        file.write('\n')
         output_charclass(file, 'blank', is_blank)
+
+        file.write('\n')
         output_charclass(file, 'space', is_space)
+
+        file.write('\n')
         output_charclass(file, 'cntrl', is_cntrl)
+
+        file.write('\n')
         output_charclass(file, 'punct', is_punct)
+
+        file.write('\n')
+        file.write('% The "xdigit" class must only contain the BASIC LATIN digits and A-F, a-f,\n')
+        file.write('% says ISO C 99 (sections 7.25.2.1.12 and 6.4.4.1).\n')
         output_charclass(file, 'xdigit', is_xdigit)
+
+        file.write('\n')
         output_charclass(file, 'graph', is_graph)
+
+        file.write('\n')
         output_charclass(file, 'print', is_print)
+
+        file.write('\n')
+        file.write('% The "combining" class reflects ISO/IEC 10646-1 annex B.1\n')
+        file.write('% That is, all combining characters (level 2+3).\n')
         output_charclass(file, 'class "combining";', is_combining)
+
+        file.write('\n')
+        file.write('% The "combining_level3" class reflects ISO/IEC 10646-1 annex B.2\n')
+        file.write('% That is, combining characters of level 3.\n')
         output_charclass(file, 'class "combining_level3";', is_combining_level3)
+
+        file.write('\n')
         output_charmap(file, 'toupper', to_upper)
+
+        file.write('\n')
         output_charmap(file, 'tolower', to_lower)
+
+        file.write('\n')
         output_charmap(file, 'map "totitle";', to_title)
         file.write('END LC_CTYPE\n')
 
