@@ -470,9 +470,6 @@ def output_tables(filename, unicode_version):
         # output_charclass(file, 'outdigit', is_outdigit)
 
         file.write('\n')
-        output_charclass(file, 'blank', is_blank)
-
-        file.write('\n')
         output_charclass(file, 'space', is_space)
 
         file.write('\n')
@@ -482,15 +479,27 @@ def output_tables(filename, unicode_version):
         output_charclass(file, 'punct', is_punct)
 
         file.write('\n')
+        output_charclass(file, 'graph', is_graph)
+
+        file.write('\n')
+        output_charclass(file, 'print', is_print)
+
+        file.write('\n')
         file.write('% The "xdigit" class must only contain the BASIC LATIN digits and A-F, a-f,\n')
         file.write('% says ISO C 99 (sections 7.25.2.1.12 and 6.4.4.1).\n')
         output_charclass(file, 'xdigit', is_xdigit)
 
         file.write('\n')
-        output_charclass(file, 'graph', is_graph)
+        output_charclass(file, 'blank', is_blank)
 
         file.write('\n')
-        output_charclass(file, 'print', is_print)
+        output_charmap(file, 'toupper', to_upper)
+
+        file.write('\n')
+        output_charmap(file, 'tolower', to_lower)
+
+        file.write('\n')
+        output_charmap(file, 'map "totitle";', to_title)
 
         file.write('\n')
         file.write('% The "combining" class reflects ISO/IEC 10646-1 annex B.1\n')
@@ -502,14 +511,6 @@ def output_tables(filename, unicode_version):
         file.write('% That is, combining characters of level 3.\n')
         output_charclass(file, 'class "combining_level3";', is_combining_level3)
 
-        file.write('\n')
-        output_charmap(file, 'toupper', to_upper)
-
-        file.write('\n')
-        output_charmap(file, 'tolower', to_lower)
-
-        file.write('\n')
-        output_charmap(file, 'map "totitle";', to_title)
         file.write('END LC_CTYPE\n')
 
 if __name__ == "__main__":
