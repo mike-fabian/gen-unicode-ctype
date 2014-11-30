@@ -28,6 +28,9 @@ import re
 unicode_attributes = {}
 derived_core_properties = {}
 
+i18n_file_head = ''
+i18n_file_tail = ''
+
 def fill_attribute(code_point, fields):
     unicode_attributes[code_point] =  {
         'name': fields[1],
@@ -415,29 +418,59 @@ def verifications():
             sys.stderr.write('%(sym)s is graph|<space> but not print\n' %{
                 'sym': ucs_symbol(code_point)})
 
+def read_input_file(filename):
+    global i18n_file_head
+    global i18n_file_tail
+    in_head = True
+    in_tail = False
+    with open(filename, mode='r') as file:
+        for line in file:
+            if in_head:
+                match = re.match(
+                    r'^(?P<key>date\s+)(?P<value>"[0-9]{4}-[0-9]{2}-[0-9]{2}")',
+                    line)
+                if match:
+                    line = match.group('key') + '"{:s}"\n'.format(time.strftime('%Y-%m-%d'))
+                match = re.match(r'^LC_CTYPE\s*', line)
+                if match:
+                    in_head = False
+                i18n_file_head = i18n_file_head + line
+                continue
+            if in_tail:
+                i18n_file_tail = i18n_file_tail + line
+                continue
+            match = re.match(r'^translit_start\s*', line)
+            if match:
+                in_tail = True
+                i18n_file_tail = i18n_file_tail + line
+                continue
+
 def output_tables(filename, unicode_version):
     with open(filename, mode='w') as file:
-        file.write('escape_char /\n')
-        file.write('comment_char %\n')
-        file.write('\n')
-        file.write('% Generated automatically by gen-unicode-ctype.py for Unicode {:s}.\n'.format(unicode_version))
-        file.write('\n')
-        file.write('LC_IDENTIFICATION\n')
-        file.write('title     "Unicode {:s} FDCC-set"\n'.format(unicode_version))
-        file.write('source    "UnicodeData.txt, DerivedCoreProperties.txt"\n')
-        file.write('address   ""\n')
-        file.write('contact   ""\n')
-        file.write('email     "bug-glibc-locales@gnu.org"\n')
-        file.write('tel       ""\n')
-        file.write('fax       ""\n')
-        file.write('language  ""\n')
-        file.write('territory "Earth"\n')
-        file.write('revision  "{:s}"\n'.format(unicode_version))
-        file.write('date      "{:s}"\n'.format(time.strftime('%Y-%m-%d')))
-        file.write('category  "unicode:2014";LC_CTYPE\n')
-        file.write('END LC_IDENTIFICATION\n')
-        file.write('\n')
-        file.write('LC_CTYPE\n')
+        if args.input_file:
+            file.write(i18n_file_head)
+        else:
+            file.write('escape_char /\n')
+            file.write('comment_char %\n')
+            file.write('\n')
+            file.write('% Generated automatically by gen-unicode-ctype.py for Unicode {:s}.\n'.format(unicode_version))
+            file.write('\n')
+            file.write('LC_IDENTIFICATION\n')
+            file.write('title     "Unicode {:s} FDCC-set"\n'.format(unicode_version))
+            file.write('source    "UnicodeData.txt, DerivedCoreProperties.txt"\n')
+            file.write('address   ""\n')
+            file.write('contact   ""\n')
+            file.write('email     "bug-glibc-locales@gnu.org"\n')
+            file.write('tel       ""\n')
+            file.write('fax       ""\n')
+            file.write('language  ""\n')
+            file.write('territory "Earth"\n')
+            file.write('revision  "{:s}"\n'.format(unicode_version))
+            file.write('date      "{:s}"\n'.format(time.strftime('%Y-%m-%d')))
+            file.write('category  "unicode:2014";LC_CTYPE\n')
+            file.write('END LC_IDENTIFICATION\n')
+            file.write('\n')
+            file.write('LC_CTYPE\n')
         file.write('% The following is the 14652 i18n fdcc-set LC_CTYPE category.\n')
         file.write('% It covers Unicode version {:s}.\n'.format(unicode_version))
         file.write('% The character classes and mapping tables were automatically\n')
@@ -510,12 +543,19 @@ def output_tables(filename, unicode_version):
         file.write('% The "combining_level3" class reflects ISO/IEC 10646-1 annex B.2\n')
         file.write('% That is, combining characters of level 3.\n')
         output_charclass(file, 'class "combining_level3";', is_combining_level3)
+        file.write('\n')
 
-        file.write('END LC_CTYPE\n')
+        if args.input_file:
+            file.write(i18n_file_tail)
+        else:
+            file.write('END LC_CTYPE\n')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Generate a Unicode conforming LC_CTYPE category from a UnicodeData file.')
+        description='''
+        Generate a Unicode conforming LC_CTYPE category from
+        UnicodeData.txt and DerivedCoreProperties.txt files.
+        ''')
     parser.add_argument('-u', '--unicode_data_file',
                         nargs='?',
                         type=str,
@@ -526,11 +566,22 @@ if __name__ == "__main__":
                         type=str,
                         default='DerivedCoreProperties.txt',
                         help='The DerivedCoreProperties.txt file to read, default: %(default)s')
+    parser.add_argument('-i', '--input_file',
+                        nargs='?',
+                        type=str,
+                        help='''The original glibc/localedata/locales/i18n file.''')
     parser.add_argument('-o', '--output_file',
                         nargs='?',
                         type=str,
-                        default='unicode',
-                        help='The file which shall contain the generated LC_CTYPE category, default: %(default)s')
+                        default='i18n.new',
+                        help='''The file which shall contain the generated LC_CTYPE category,
+                        default: %(default)s.  If the original
+                        glibc/localedata/locales/i18n has been given
+                        as an option, all data from the original file
+                        except the newly generated LC_CTYPE character
+                        classes and the date stamp in
+                        LC_IDENTIFICATION will be copied unchanged
+                        into the output file.  ''')
     parser.add_argument('--unicode_version',
                         nargs='?',
                         required=True,
@@ -541,4 +592,6 @@ if __name__ == "__main__":
     fill_attributes(args.unicode_data_file)
     fill_derived_core_properties(args.derived_core_properties_file)
     verifications()
+    if args.input_file:
+        read_input_file(args.input_file)
     output_tables(args.output_file, args.unicode_version)
