@@ -320,7 +320,7 @@ def output_charmap(file, map_name, map_function):
 def verifications():
     for code_point in sorted(unicode_attributes):
         # toupper restriction: "Only characters specified for the keywords
-	# lower and upper shall be specified.
+        # lower and upper shall be specified.
         if (to_upper(code_point) != code_point
             and not (is_lower(code_point) or is_upper(code_point))):
             sys.stderr.write(
@@ -338,13 +338,13 @@ def verifications():
                     'c': code_point,
                     'uc': to_lower(code_point)})
         # alpha restriction: "Characters classified as either upper or lower
-	# shall automatically belong to this class.
+        # shall automatically belong to this class.
         if ((is_lower(code_point) or is_upper(code_point))
              and not is_alpha(code_point)):
             sys.stderr.write('%(sym)s is upper|lower but not alpha\n' %{
                 'sym': ucs_symbol(code_point)})
         # alpha restriction: “No character specified for the keywords cntrl,
-	# digit, punct or space shall be specified.”
+        # digit, punct or space shall be specified.”
         if (is_alpha(code_point) and is_cntrl(code_point)):
             sys.stderr.write('%(sym)s is alpha and cntrl\n' %{
                 'sym': ucs_symbol(code_point)})
@@ -358,8 +358,8 @@ def verifications():
             sys.stderr.write('%(sym)s is alpha and space\n' %{
                 'sym': ucs_symbol(code_point)})
         # space restriction: “No character specified for the keywords upper,
-	# lower, alpha, digit, graph or xdigit shall be specified.”
-	# upper, lower, alpha already checked above.
+        # lower, alpha, digit, graph or xdigit shall be specified.”
+        # upper, lower, alpha already checked above.
         if (is_space(code_point) and is_digit(code_point)):
             sys.stderr.write('%(sym)s is space and digit\n' %{
                 'sym': ucs_symbol(code_point)})
@@ -370,8 +370,8 @@ def verifications():
             sys.stderr.write('%(sym)s is space and xdigit\n' %{
                 'sym': ucs_symbol(code_point)})
         # cntrl restriction: “No character specified for the keywords upper,
-	# lower, alpha, digit, punct, graph, print or xdigit shall be
-	# specified.”  upper, lower, alpha already checked above.
+        # lower, alpha, digit, punct, graph, print or xdigit shall be
+        # specified.”  upper, lower, alpha already checked above.
         if (is_cntrl(code_point) and is_digit(code_point)):
             sys.stderr.write('%(sym)s is cntrl and digit\n' %{
                 'sym': ucs_symbol(code_point)})
@@ -388,8 +388,8 @@ def verifications():
             sys.stderr.write('%(sym)s is cntrl and xdigit\n' %{
                 'sym': ucs_symbol(code_point)})
         # punct restriction: “No character specified for the keywords upper,
-	# lower, alpha, digit, cntrl, xdigit or as the <space> character shall
-	# be specified.”  upper, lower, alpha, cntrl already checked above.
+        # lower, alpha, digit, cntrl, xdigit or as the <space> character shall
+        # be specified.”  upper, lower, alpha, cntrl already checked above.
         if (is_punct(code_point) and is_digit(code_point)):
             sys.stderr.write('%(sym)s is punct and digit\n' %{
                 'sym': ucs_symbol(code_point)})
@@ -400,15 +400,15 @@ def verifications():
             sys.stderr.write('%(sym)s is punct\n' %{
                 'sym': ucs_symbol(code_point)})
         # graph restriction: “No character specified for the keyword cntrl
-	# shall be specified.”  Already checked above.
+        # shall be specified.”  Already checked above.
 
         # print restriction: “No character specified for the keyword cntrl
-	# shall be specified.”  Already checked above.
+        # shall be specified.”  Already checked above.
 
         # graph - print relation: differ only in the <space> character.
-	# How is this possible if there are more than one space character?!
-	# I think susv2/xbd/locale.html should speak of “space characters”,
-	# not “space character”.
+        # How is this possible if there are more than one space character?!
+        # I think susv2/xbd/locale.html should speak of “space characters”,
+        # not “space character”.
         if (is_print(code_point)
             and not (is_graph(code_point) or is_space(code_point))):
             sys.stderr.write('%(sym)s is print but not graph|<space>\n' %{
